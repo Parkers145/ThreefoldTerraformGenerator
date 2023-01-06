@@ -1,0 +1,132 @@
+# Funtion to check and create save path directory
+check_and_create_dir() {
+  # $1 is the directory to check
+  if [ ! -d "$1" ]; then
+    # Directory does not exist, so create it
+    mkdir "$1"
+  fi
+}
+
+# Function to generate grid_deployment blocks
+generate_grid_deployment_blocks() {
+  # Initialize empty arrays to store disk and vm blocks
+  VMS_BLOCKS=()
+  
+  # Request input for number of VMs to create
+  read -p "Enter the number of VMs you want to create: " NUM_VMS
+
+  # Loop through and request input for VMNAME, VMDESC, FLIST, PUB4, PUB6, MEMORY, and YGG
+  echo "Enter values for each VM:"
+  for i in $(seq 1 $NUM_VMS)
+  do
+	read -p "Enter vm node: " VMNODE
+	read -p "Enter vm name: " VMNAME
+    read -p "Enter vm description: " VMDESC
+    read -p "Enter vm flist: " FLIST
+    read -p "Enter vm public ip4: " PUB4
+    read -p "Enter vm public ip6: " PUB6
+    read -p "Enter vm memory: " NUM_MEMORY
+    read -p "Enter vm planetary node: " YGG
+    read -p "Enter vm cpu: " NUM_CPU
+	
+	# Initialize empty arrays to store disk blocks
+	DISK_BLOCKS=()
+	
+	# Request input for number of disks blocks to add
+	read -p "Enter the number of disk blocks you want to add: " NUM_DISKS
+
+	# Loop through and request input for DISKNAME and DISKSIZE for each disk
+	# for i in $(seq 1 $NUM_DISKS)
+	for ((j=1;j<=NUM_DISKS;j++)); do
+	# do
+    read -p "Enter disk name: " DISKNAME
+    read -p "Enter disk size: " DISKSIZE
+
+   # Create disks block string with input values and add to array 
+	DISK_BLOCK="disks {
+	name = \"$DISKNAME\"
+	size = \"$DISKSIZE\"
+	}"
+	# Add disks block string to array on a new line	
+	DISK_BLOCKS+=("$(printf "%s\\n" "$DISK_BLOCK")")
+
+    # Add disks block string to array
+    
+  done
+
+    # Initialize MOUNT_BLOCKS array
+    MOUNT_BLOCKS=()
+
+    # Request input for number of mounts to create
+    # read -p "Enter the number of mounts you want to create for VM $i: " NUM_MOUNTS
+
+    # Loop through and request input for DISKNAME and MOUNTPOINT for each mount
+    for ((j=1;j<=NUM_DISKS;j++)); do
+      # Print available disks
+      printf "\nAvailable disks:\n"
+      for k in "${!DISK_BLOCK[*]}"; do
+          printf "%s\n" "$k"
+      done
+
+            # Request input for disk to mount
+      read -p "Enter name of disk to mount for mount $j: " DISK_NAME
+
+      # Request input for mount point
+      read -p "Enter mount point for disk $DISK_NAME: " MOUNT_POINT
+
+      # Create mount block string with input values and add to array
+      MOUNT_BLOCK="mounts {
+       disk_name = \"$DISK_NAME\"
+       mount_point = \"$MOUNT_POINT\"
+      }"
+      MOUNT_BLOCKS+=("$MOUNT_BLOCK")
+    done
+
+    # Create vm block string with input values
+	VMS_BLOCK="resource \"grid_deployment\" \"D$i\" {
+	node = [$VMNODE]
+	network_name = \"$GRID_NETNAME\"
+	${DISK_BLOCKS[*]}
+    vms {
+    name = \"$VMNAME\"
+    description = \"$VMDESC\"
+    flist = \"$FLIST\"
+    cpu = \"$NUM_CPU\"
+    publicip = \"$PUB4\"
+    publicip6 = \"$PUB6\"
+    memory = \"$NUM_MEMORY\"
+    ${MOUNT_BLOCKS[*]}
+    planetary = \"$YGG\"
+    env_vars = {
+      SSH_KEY = \"$SSH_KEY\"
+    }
+  }
+}"
+
+
+    # Add vm block string to array
+    VMS_BLOCKS+=("$VMS_BLOCK")
+  done
+}
+
+# Function to generate main.tf
+generate_main_tf() {
+  # Concatenate DISK_BLOCKS and VMS_BLOCKS arrays and create main.tf
+  printf "
+  ${VMS_BLOCKS[*]}
+}" > $SAVE_PATH/main.tf
+
+  echo "main.tf successfully created at $SAVE_PATH/main.tf"
+}
+
+# Request path to save main.tf
+echo "Enter the path where you want to save main.tf (e.g. /home/user/):"
+read "SAVE_PATH"
+
+# Call generate_grid_deployment_blocks function
+generate_grid_deployment_blocks
+
+# Call generate_main_tf function
+generate_main_tf
+
+echo "main.tf successfully created at $SAVE_PATH/main.tf"
