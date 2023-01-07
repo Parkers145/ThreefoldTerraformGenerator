@@ -1,5 +1,10 @@
 # Function to generate grid_network blocks
 generate_grid_network_blocks() {
+  # Request Number of Grid_Network Deployements 
+  # read -p "How many Grid Networks Are you Deploying[1]: " NUM_NetRD
+  if [[ -z $NUM_NetRD ]]; then
+  NUM_NetRD="1"
+  fi
   # Initialize empty array to store grid_network blocks
   NET_BLOCKS=()
 
@@ -7,22 +12,41 @@ generate_grid_network_blocks() {
   echo "Enter values for each Grid_Network:"
   for i in $(seq 1 $NUM_NetRD)
   do
-    read -p "Add Grid_Network Identifer: " NetId
-    read -p "Enter Grid_Network Node: " NUM_NetNo
-    # read -p "Enter Grid_Network Name: " NetName
-    read -p "Enter Grid_Network Description: " NetDesc
-    read -p "Enter Grid_Network IP_RANGE: " IP_RANGE
-    read -p "Add WireGaurd Access True/False: " addwgaccess
+    read -p "Enter All of the Node IDs you will be Deploying on [1, 2]:" GRID_NODE
+	if [[ -z $GRID_NODE ]]; then
+    GRID_NODE="[1, 2]"
+    fi
+    read -p "Name Your Grid Network[Net1]:" NetName
+	if [[ -z $NetName ]]; then 
+	NetName="Net1"
+	fi
+    read -p "Describe Your Network[MyNetwork1]:" NetDesc
+	if [[ -z $NetDesc ]]; then 
+	NetDesc="MyNetwork1"
+	fi
+    read -p "Enter the Private Subnet Ip Range of your Network[10.0.0.0/24]" IP_RANGE
+	if [[ -z $IP_RANGE ]]; then 
+	IP_RANGE="10.0.0.0/24"
+	fi
+	read -p "Add WireGaurd Access True/False:  (y/n) [Y]" addwgaccess
+	if [[ -z $addwgaccess ]]; then
+		addwgaccess=y
+	fi
+	if [[ $addwgaccess == "y" ]]; then
+		addwgaccess=true
+	else
+		addwgaccess=false
+	fi
+	
 
     # Create grid_network block string with input values
-    NET_BLOCK="
-resource \"grid_network\" \"$NetId\" {
-    nodes = [$NUM_NetNo]
+    NET_BLOCK="resource \"grid_network\" \"net1\" {
+    nodes = $GRID_NODE
     ip_range = \"$IP_RANGE\"
-    name = \"$GRID_NETNAME\"
+    name = \"$NetName\"
     description = \"$NetDesc\"
     add_wg_access = \"$addwgaccess\"
-  }"
+}"
 
     # Add grid_network block string to array
     NET_BLOCKS+=("$NET_BLOCK")
@@ -32,109 +56,136 @@ resource \"grid_network\" \"$NetId\" {
 # Function to generate grid_deployment blocks
 generate_grid_deployment_blocks() {
   # Initialize empty arrays to store disk and vm blocks
-  DISK_BLOCKS=()
   VMS_BLOCKS=()
-
-  # Request input for number of disks blocks to add
-  read -p "Enter the number of disk blocks you want to add: " NUM_DISKS
-
-  # Loop through and request input for DISKNAME and DISKSIZE for each disk
-  echo "Enter values for each disk:"
-  for i in $(seq 1 $NUM_DISKS)
-  do
-    read -p "Enter disk name: " DISKNAME
-    read -p "Enter disk size: " DISKSIZE
-
-    # Create disks block string with input values
-    DISK_BLOCK="  disks {
-    name = \"$DISKNAME\"
-    size = \"$DISKSIZE\"
-  }"
-
-    # Add disks block string to array
-    DISK_BLOCKS+=("$DISK_BLOCK")
-  done
-
+  
   # Request input for number of VMs to create
-  read -p "Enter the number of VMs you want to create: " NUM_VMS
-
+  read -p "Enter the number of VMs you want to create[1]: " NUM_VMS
+  if [[ -z $NUM_VMS ]]; then
+  NUM_VMS="1"
+  fi
   # Loop through and request input for VMNAME, VMDESC, FLIST, PUB4, PUB6, MEMORY, and YGG
   echo "Enter values for each VM:"
   for i in $(seq 1 $NUM_VMS)
   do
-    read -p "Enter vm name: " VMNAME
-    read -p "Enter vm description: " VMDESC
-    read -p "Enter vm flist: " FLIST
-    read -p "Enter vm public ip4: " PUB4
-    read -p "Enter vm public ip6: " PUB6
-    read -p "Enter vm memory: " NUM_MEMORY
-    read -p "Enter vm planetary node: " YGG
-    read -p "Enter vm cpu: " NUM_CPU
-
-    # Initialize MOUNT_BLOCKS array
+	read -p "Choose node for vm $i [1]: " VMNODE
+	if [[ -z $VMNODE ]]; then
+    VMNODE="1"
+	fi
+	read -p "Choose a Name for VM $i [VM$i]: " VMNAME
+	if [[ -z $VMNAME ]]; then
+		VMNAME=VM$i
+	fi
+    read -p "Choose a Description for VM $i[MyVm$i]: " VMDESC
+	if [[ -z $VMDESC ]]; then
+		VMDESC=MyVm$i
+	fi
+    read -p "FLlist URL From Hub.Grid.TF [https://hub.grid.tf/tf-official-vms/ubuntu-20.04-lts.flist]: " FLIST
+	if [[ -z $FLIST ]]; then
+    FLIST="https://hub.grid.tf/tf-official-vms/ubuntu-20.04-lts.flist"
+	fi
+	read -p "Enter Number of Cores for VM $i [4]: " NUM_CPU
+	if [[ -z $NUM_CPU ]]; then
+    NUM_CPU="4"
+	fi
+	read -p "Enter  [4096]: " NUM_MEMORY
+	if [[ -z $NUM_MEMORY ]]; then
+    NUM_MEMORY="4096"
+	fi
+    read -p "Should VM $i have a public IPV4 address? (y/n) [Y] " PUB4
+	if [[ -z $PUB4 ]]; then
+		PUB4=y
+	fi
+	if [[ $PUB4 == "y" ]]; then
+		PUB4=true
+	else
+		PUB4=false
+	fi
+    read -p "Should VM $i have a public IPV6 address? (y/n) [Y] " PUB6
+	if [[ -z $PUB6 ]]; then
+		PUB6=y
+	fi
+	if [[ $PUB6 == "y" ]]; then
+		PUB6=true
+	else
+		PUB6=false
+	fi
+    read -p "Should VM $i have a Planetary Network Address? (y/n) [Y] " YGG
+	if [[ -z $YGG ]]; then
+		YGG=y
+	fi
+	if [[ $YGG == "y" ]]; then
+		YGG=true
+	else
+		YGG=false
+	fi
+    
+	# Initialize empty arrays to store disk blocks
+	DISK_BLOCKS=()
+	# Initialize MOUNT_BLOCKS array
     MOUNT_BLOCKS=()
+	
+	# Request input for number of disks blocks to add
+	read -p "Enter the number of disk blocks you want to add[1]: " NUM_DISKS
+	if [[ -z $NUM_DISKS ]]; then
+		NUM_DISKS="1"
+	fi
 
-    # Request input for number of mounts to create
-    read -p "Enter the number of mounts you want to create for VM $i: " NUM_MOUNTS
+	# Loop through and request input for DISKNAME and DISKSIZE for each disk
+	# for i in $(seq 1 $NUM_DISKS)
+	for ((j=1;j<=NUM_DISKS;j++)); do
+	# do
+    read -p "Enter disk name for DISK $j[Disk$j]: " DISKNAME
+	if [[ -z $DISKNAME ]]; then
+		DISKNAME=Disk$j
+	fi
+    read -p "Enter the size in GB for $DISKNAME[25]: " DISKSIZE
+	if [[ -z $DISKSIZE ]]; then
+		DISKSIZE="25"
+	fi
+	 # Request input for mount point
+    read -p "Enter mount point for disk $DISKNAME [/data$j]: " MOUNT_POINT
+	if [[ -z $MOUNT_POINT ]]; then
+		MOUNT_POINT="/data$j"
+	fi
 
-    # Loop through and request input for DISKNAME and MOUNTPOINT for each mount
-    for ((j=1;j<=NUM_MOUNTS;j++)); do
-      # Print available disks
-      printf "\nAvailable disks:\n"
-      for k in "${!DISK_BLOCKS[@]}"; do
-          printf "%s\n" "$k"
-      done
+    # Create disks block string with input values and add to array 
+	DISK_BLOCK="disks { \n	 name = \"$DISKNAME\" \n	 size = \"$DISKSIZE\" \n  } \n  "
+	
+	# Join DISK_BLOCKS array with newline separator
+	DISK_BLOCKS+=$(IFS=$'\n'; echo "${DISK_BLOCK[*]}")
+	
+	# Create mount block string with input values 
+	MOUNT_BLOCK="mounts { \n	 disk_name = \"$DISKNAME\" \n	 mount_point = \"$MOUNT_POINT\" \n	}\n	"
+    
+	# Join MOUNT_BLOCKS array with newline separator
+	MOUNT_BLOCKS+=$(IFS=$'\n'; echo "${MOUNT_BLOCK[*]}")
+  done	
+    
+	# Create vm block string with input values
+	VMS_BLOCK="resource \"grid_deployment\" \"D$i\" { \n  node = [$VMNODE] \n  network_name = \"$NetName\" \n  ${DISK_BLOCKS[*]}  vms { \n    name = \"$VMNAME\" \n    description = \"$VMDESC\" \n    flist = \"$FLIST\" \n    cpu = \"$NUM_CPU\" \n    publicip = \"$PUB4\" \n    publicip6 = \"$PUB6\" \n    memory = \"$NUM_MEMORY\" \n    ${MOUNT_BLOCKS[*]}planetary = \"$YGG\" \n    env_vars = { \n      SSH_KEY = \"$SSH_KEY\" \n    } \n  } \n} \n"
 
-            # Request input for disk to mount
-      read -p "Enter name of disk to mount for mount $j: " DISK_NAME
-
-      # Request input for mount point
-      read -p "Enter mount point for disk $DISK_NAME: " MOUNT_POINT
-
-      # Create mount block string with input values and add to array
-      MOUNT_BLOCK="mounts {
-        disk_name = \"$DISK_NAME\"
-        mount_point = \"$MOUNT_POINT\"
-      }"
-      MOUNT_BLOCKS+=("$MOUNT_BLOCK")
-    done
-
-    # Create vm block string with input values
-    VMS_BLOCK="  vms {
-      name = \"$VMNAME\"
-      description = \"$VMDESC\"
-      flist = \"$FLIST\"
-      cpu = \"$NUM_CPU\"
-      publicip = \"$PUB4\"
-      publicip6 = \"$PUB6\"
-      memory = \"$NUM_MEMORY\"
-      planetary = \"$YGG\"
-      env_vars = {
-        SSH_KEY = \"$SSH_KEY\"
-      }
-      ${MOUNT_BLOCKS[@]}
-    }"
-
-    # Add vm block string to array
-    VMS_BLOCKS+=("$VMS_BLOCK")
+    
+	# Add vm block string to array
+	VMS_BLOCKS+=$(IFS=$'\n'; echo "${VMS_BLOCK[*]}")
+	
+	
   done
+}
+
+# Funtion to check and create save path directory
+check_and_create_dir() {
+  # $1 is the directory to check
+  if [ ! -d "$1" ]; then
+    # Directory does not exist, so create it
+    mkdir "$1"
+  fi
 }
 
 # Function to generate main.tf
 generate_main_tf() {
   # Concatenate DISK_BLOCKS and VMS_BLOCKS arrays and create main.tf
-  printf "resource \"grid_network\" \"$NET_ID\" {
-  nodes = [$NET_NODES]
-  ip_range = \"$IP_RANGE\"
-  name = \"$NET_NAME\"
-  description = \"$NET_DESC\"
-  add_wg_access = \"$addwgaccess\"
-}\n\nresource \"grid_deployment\" \"$GRID_ID\" {
-  nodes = [$GRID_NODE]
-  network = \"$GRID_NETNAME\"
-  ${DISK_BLOCKS[@]}
-  ${VMS_BLOCKS[@]}
-}" > $SAVE_PATH/main.tf
+  printf "${NET_BLOCKS[*]}
+${VMS_BLOCKS[*]}" > $SAVE_PATH/main.tf
 
   echo "main.tf successfully created at $SAVE_PATH/main.tf"
 }
@@ -142,18 +193,6 @@ generate_main_tf() {
 # Request path to save main.tf
 echo "Enter the path where you want to save main.tf (e.g. /home/user/):"
 read SAVE_PATH
-
-# Prompt for identifier of grid_deployment resource
-echo "Enter grid deployment identifier:"
-read GRID_ID
-
-# Request node IDs for the grid_deployment resource
-echo "Enter the node IDs of the nodes you would like to deploy on:"
-read GRID_NODE
-
-# Request network name
-echo "Enter the name of the grid network:"
-read GRID_NETNAME
 
 # Call generate_grid_network_blocks
 generate_grid_network_blocks
