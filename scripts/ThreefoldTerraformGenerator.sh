@@ -1,4 +1,192 @@
-# Function to generate grid_network blocks
+#  Function to Provide Root Menu of Script
+root_menu() {
+  # Display the welcome message 
+  echo "  
+	_________        _______ _______ _______ _______ _______ _       ______  
+	\__   __/\     /(  ____ |  ____ (  ____ (  ____ (  ___  | \     (  __  \ 
+	   ) (  | )   ( | (    )| (    \/ (    \/ (    \/ (   ) | (     | (  \  )
+	   | |  | (___) | (____)| (__   | (__   | (__   | |   | | |     | |   ) |
+	   | |  |  ___  |     __)  __)  |  __)  |  __)  | |   | | |     | |   | |
+	   | |  | (   ) | (\ (  | (     | (     | (     | |   | | |     | |   ) |
+	   | |  | )   ( | ) \ \_| (____/\ (____/\ )     | (___) | (____/\ (__/  )
+	   )_(  |/     \|/   \__(_______(_______//      (_______|_______(______/ 
+                                                                         
+																				   
+ ________________ _______ _______ _______ _______ _______ _______ _______ _______ _______ 
+\__   __(  ____ (  ____ |  ____ |  ___  |  ____ (  ___  |  ____ |       |  ____ (  ____ )
+   ) (  | (    \/ (    )| (    )| (   ) | (    \/ (   ) | (    )| () () | (    \/ (    )|
+   | |  | (__   | (____)| (____)| (___) | (__   | |   | | (____)| || || | (__   | (____)|
+   | |  |  __)  |     __)     __)  ___  |  __)  | |   | |     __) |(_)| |  __)  |     __)
+   | |  | (     | (\ (  | (\ (  | (   ) | (     | |   | | (\ (  | |   | | (     | (\ (   
+   | |  | (____/\ ) \ \_| ) \ \_| )   ( | )     | (___) | ) \ \_| )   ( | (____/\ ) \ \__
+   )_(  (_______//   \__//   \__//     \|/      (_______)/   \__//     \(_______//   \__/
+                                                                                         "
+  
+  # Display the menu options
+  echo "1) Install Terraform"
+  echo "2) Generate a main.tf"
+  echo "3) Generate an env.tfvars"
+  echo "4) Deploy a main.tf"
+
+  # Request input for the menu option
+  read -p "Enter your selection [1-4]: " SELECTION
+
+  # Validate the input
+  while [[ ! $SELECTION =~ ^[1-4]$ ]]; do
+    # If the input is not valid, display an error message and prompt the user again
+    read -p "Invalid input. Please enter a number between 1 and 4: " SELECTION
+  done
+
+  # Process the selection
+  case $SELECTION in
+    1)
+      # Install Terraform
+      install_terraform
+      ;;
+    2)
+      # Generate a main.tf
+      generate_a_main_tf
+      ;;
+    3)
+      # Generate an env.tfvars
+      generate_a_env_tfvars
+      ;;
+    4)
+      # Deploy a main.tf
+      deploy_main_tf
+      ;;
+  esac
+
+  # Return to the main menu
+  root_menu
+}
+#  Function to Install Terraform 
+install_terraform() {
+  # Check if Terraform is already installed
+  if command -v terraform >/dev/null 2>&1; then
+    echo "Terraform is already installed. Skipping installation."
+  else
+    # Ensure that system is up to date and necessary packages are installed
+    echo "Updating system and installing necessary packages"
+    sudo apt-get update && sudo apt-get install -y gnupg software-properties-common curl
+
+    # Install HashiCorp GPG key
+    echo "Installing HashiCorp GPG key"
+    wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg
+
+    # Verify key's fingerprint
+    echo "Verifying key's fingerprint"
+    gpg --no-default-keyring --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg --fingerprint
+
+    # Add official HashiCorp repository
+    echo "Adding official HashiCorp repository"
+    echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+
+    # Download package information from HashiCorp
+    echo "Downloading package information from HashiCorp"
+    sudo apt update
+
+    # Install Terraform
+    echo "Installing Terraform"
+    sudo apt-get install terraform
+
+    # Verify installation
+    echo "Verifying installation"
+    terraform --version
+  fi
+}
+#  Function to Generate Main.tf files 
+generate_a_main_tf()	{
+# Request path to save main.tf
+echo "Enter the path where you want to save main.tf (e.g. /home/user/):"
+read SAVE_PATH
+
+# Check and Create Directory 
+# check_and_create_dir "$save_path"
+
+# Prompt for identifier of grid_deployment resource
+# echo "Enter grid deployment identifier:"
+# read GRID_ID
+
+# Request node IDs for the grid_deployment resource
+#read -p "Enter the node IDs of all the nodes you would like to deploy on[1, 2]:" GRID_NODE
+#if [[ -z $GRID_NODE ]]; then
+#  GRID_NODE="1"
+ # fi
+
+# Request network name
+#echo "Enter the name of the grid network:"
+#read  GRID_NETNAME
+
+# Call generate_grid_network_blocks
+generate_grid_network_blocks
+
+# Call generate_grid_deployment_blocks function
+generate_grid_deployment_blocks
+
+# Call generate_main_tf function
+generate_main_tf
+
+echo "main.tf successfully created at $SAVE_PATH/main.tf"
+}
+#  Function to Generate Env.tfvars files 
+generate_a_env_tfvars() {
+  # Request path main.tf to be deployed
+  echo "Enter the path where you want to save main.tf (e.g. /home/user/):"
+  read SAVE_PATH
+
+  # Request input for the mnemonic phrase
+  read -p "Enter the mnemonic phrase: " MNEMONICS
+  
+  # Validate the input
+  while [[ -z $MNEMONICS ]]; do
+    # If the input is empty, display an error message and prompt the user again
+    read -p "Invalid input. Please enter a mnemonic phrase: " MNEMONICS
+  done
+
+  # Request input for the network
+  read -p "Enter the network [main]: " NETWORK
+  
+  # Set the default value if the input is empty
+  if [[ -z $NETWORK ]]; then
+    NETWORK="main"
+  fi
+
+  # Request input for the level of parallelism
+  read -p "Enter the level of parallelism [1]: " TF_PARALLELISM
+  
+  # Validate the input
+  while [[ ! $TF_PARALLELISM =~ ^[1-9]|[1-9][0-9]|[1-2][0-9]{2}|3[0-1]{2}$ ]]; do
+    # If the input is not valid, display an error message and prompt the user again
+    read -p "Invalid input. Please enter a number between 1 and 32: " TF_PARALLELISM
+  done
+  
+  # Set the default value if the input is empty
+  if [[ -z $TF_PARALLELISM ]]; then
+    TF_PARALLELISM="1"
+  fi
+
+  # Request input for the SSH key
+  read -p "Enter the SSH key: " SSH_KEY
+  
+  # Validate the input
+  while [[ -z $SSH_KEY ]]; do
+    # If the input is empty, display an error message and prompt the user again
+    read -p "Invalid input. Please enter an SSH key: " SSH_KEY
+  done
+
+  # Create the env.tfvars file
+  cat > $SAVE_PATH/env.tfvars <<EOF
+MNEMONICS = "$MNEMONICS"
+NETWORK = "$NETWORK"
+TF_PARALLELISM = "$TF_PARALLELISM"
+SSH_KEY = "$SSH_KEY"
+EOF
+
+echo "env.tfvars successfully created at $SAVE_PATH/env.tfars"
+}
+
+# Function to generate grid_network blocks -sub function of  Function to Generate Main.tf files 
 generate_grid_network_blocks() {
   # Request Number of Grid_Network Deployements 
   # read -p "How many Grid Networks Are you Deploying[1]: " NUM_NetRD
@@ -53,7 +241,7 @@ generate_grid_network_blocks() {
   done
 }
 
-# Function to generate grid_deployment blocks
+# Function to generate grid_deployment blocks -sub function of  Function to Generate Main.tf files 
 generate_grid_deployment_blocks() {
   # Initialize empty arrays to store disk and vm blocks
   VMS_BLOCKS=()
@@ -175,8 +363,10 @@ generate_grid_deployment_blocks() {
   done
 }
 
-# Function to Generate Output_Blocks 
+# Function to Generate Output_Blocks -sub function of  Function to Generate Main.tf files 
 generate_vm_output_blocks()  {
+ # Clear Output block strings from prior run 
+   
  # Print list of available output options
   echo "Available output variables:"
   echo "1. output wiregaurd gateway configuration"
@@ -221,6 +411,7 @@ generate_vm_output_blocks()  {
   done
 }
 
+# Function that prints and formats the final main.tf -sub function of  Function to Generate Main.tf files
  generate_main_tf() {
   # Print variables block
   printf "
@@ -263,37 +454,5 @@ ${VMS_BLOCKS[*]}
 ${OUTPUT_BLOCKS[*]}" > $SAVE_PATH/main.tf
 }
 
-# Request path to save main.tf
-echo "Enter the path where you want to save main.tf (e.g. /home/user/):"
-read SAVE_PATH
-
-# Check and Create Directory 
-# check_and_create_dir "$save_path"
-
-# Prompt for identifier of grid_deployment resource
-# echo "Enter grid deployment identifier:"
-# read GRID_ID
-
-# Request node IDs for the grid_deployment resource
-#read -p "Enter the node IDs of all the nodes you would like to deploy on[1, 2]:" GRID_NODE
-#if [[ -z $GRID_NODE ]]; then
-#  GRID_NODE="1"
- # fi
-
-# Request network name
-#echo "Enter the name of the grid network:"
-#read  GRID_NETNAME
-
-# Call generate_grid_network_blocks
-generate_grid_network_blocks
-
-# Call generate_grid_deployment_blocks function
-generate_grid_deployment_blocks
-
-# Call generate_main_tf function
-generate_main_tf
-
-echo "main.tf successfully created at $SAVE_PATH/main.tf"
-
-
-     
+# Call the root_menu function to start the script
+root_menu
