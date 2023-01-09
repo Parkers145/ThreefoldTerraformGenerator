@@ -426,12 +426,6 @@ variable \"NETWORK\" {
   description = \"The network to connect the node to.\"
 }
 
-variable \"TF_PARALLELISM\" {
-  type        = number
-  default     = 1
-  description = \"The level of parallelism to use when applying changes.\"
-}
-
 variable \"SSH_KEY\" {
   type = string
 }
