@@ -26,7 +26,7 @@ root_menu() {
   echo "1) Install Terraform"
   echo "2) Generate a main.tf"
   echo "3) Generate an env.tfvars"
-  echo "4) Deploy a main.tf"
+  echo "4) Modify an existing Main.tf for use with env.tfvars file"
 
   # Request input for the menu option
   read -p "Enter your selection [1-4]: " SELECTION
@@ -52,8 +52,8 @@ root_menu() {
       generate_a_env_tfvars
       ;;
     4)
-      # Deploy a main.tf
-      deploy_main_tf
+      # Modify an existing Main.tf for use with env.tfvars file
+      modify_main_tf
       ;;
   esac
 
@@ -275,7 +275,7 @@ generate_grid_deployment_blocks() {
 	if [[ -z $NUM_CPU ]]; then
     NUM_CPU="4"
 	fi
-	read -p "Enter Amount of Memor in MB for Vm $i  [4096]: " NUM_MEMORY
+	read -p "Enter Amount of Memory in MB for Vm $i  [4096]: " NUM_MEMORY
 	if [[ -z $NUM_MEMORY ]]; then
     NUM_MEMORY="4096"
 	fi
@@ -446,6 +446,42 @@ provider \"grid\" {
 ${NET_BLOCKS[*]}
 ${VMS_BLOCKS[*]}
 ${OUTPUT_BLOCKS[*]}" > $SAVE_PATH/main.tf
+}
+modify_main_tf() {
+    read -p "Enter the path to the main.tf file: " file
+
+    # check if file exists
+    if [ ! -f $file ]; then
+        echo "$file not found."
+        return 1
+    fi
+
+    # add variables
+    cat << EOF >> $file
+
+variable "MNEMONICS" {
+      type        = string
+      description = "The mnemonic phrase used to generate the seed for the node."
+    }
+
+variable "NETWORK" {
+      type        = string
+      default     = "main"
+      description = "The network to connect the node to."
+    }
+
+variable "SSH_KEY" {
+      type = string
+    }
+EOF
+  
+    # modify provider block
+    sed -i '/provider "grid" {/a\
+    mnemonics = "${var.MNEMONICS}"\
+    network = "${var.NETWORK}"' $file
+
+    # modify deployment blocks
+    sed -i 's/      SSH_KEY[[:space:]]*=[[:space:]]*"[^"]*"/      SSH_KEY = "${var.SSH_KEY}"/' $file
 }
 
 # Call the root_menu function to start the script
