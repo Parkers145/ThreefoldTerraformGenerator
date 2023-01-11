@@ -152,20 +152,6 @@ generate_a_env_tfvars() {
     NETWORK="main"
   fi
 
-  # Request input for the level of parallelism
-  read -p "Enter the level of parallelism [1]: " TF_PARALLELISM
-  
-  # Validate the input
-  while [[ ! $TF_PARALLELISM =~ ^[1-9]|[1-9][0-9]|[1-2][0-9]{2}|3[0-1]{2}$ ]]; do
-    # If the input is not valid, display an error message and prompt the user again
-    read -p "Invalid input. Please enter a number between 1 and 32: " TF_PARALLELISM
-  done
-  
-  # Set the default value if the input is empty
-  if [[ -z $TF_PARALLELISM ]]; then
-    TF_PARALLELISM="1"
-  fi
-
   # Request input for the SSH key
   read -p "Enter the SSH key: " SSH_KEY
   
@@ -179,7 +165,6 @@ generate_a_env_tfvars() {
   cat > $SAVE_PATH/env.tfvars <<EOF
 MNEMONICS = "$MNEMONICS"
 NETWORK = "$NETWORK"
-TF_PARALLELISM = "$TF_PARALLELISM"
 SSH_KEY = "$SSH_KEY"
 EOF
 
