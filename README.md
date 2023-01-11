@@ -5,7 +5,7 @@ The **root_menu** function is the main menu of the script. It displays a welcome
 - Install Terraform
 - Generate a main.tf
 - Generate an env.tfvars
-- Deploy a main.tf
+- modify an existing main.tf for deployment with env.tfvars file. 
 
 The **install_terraform function** installs Terraform, if it is not already installed. The function checks if Terraform is installed by checking if the terraform command is available. If Terraform is already installed, a message is displayed to the user and the function exits. If Terraform is not installed, the function downloads and installs the latest version of Terraform.
 
