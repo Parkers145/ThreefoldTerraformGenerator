@@ -13,7 +13,8 @@ The **generate_a_main_tf** function generates a main.tf file. This file is a con
 
 The **generate_a_env_tfvars** function generates an env.tfvars file. This file contains variables and their values that can be used in the main.tf file.
 
-The **deploy_main_tf function** deploys the infrastructure described in the main.tf file using Terraform.
+The **modify_main_tf function** takes terraform configuration file that is not setup to be used with env.tfvars, and modifies it to be usable with one. 
+
 
 **FUNCTIONALITY STATUSES**
 
